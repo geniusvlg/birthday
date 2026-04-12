@@ -58,7 +58,7 @@
     var ctx = canvas.getContext('2d');
     var dpr = window.devicePixelRatio || 1;
     var charSize = 14;
-    var fontSize = 16;
+    var fontSize = 20;
     var columns, drops, charIndices;
     // Cache safe-area so we don't touch DOM every frame
     var safeL = 0, safeT = 0, safeR = 0, safeB = 0;
@@ -80,7 +80,7 @@
       ctx.fillRect(0, 0, logW, logH);
       columns = Math.floor(logW / (fontSize / 2));
       drops = Array.from({ length: columns }, function () {
-        return Math.floor(Math.random() * logH / charSize);
+        return -Math.floor(Math.random() * logH / charSize);
       });
       charIndices = Array.from({ length: columns }, function (_, i) {
         return i % backgroundText.length;
