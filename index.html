@@ -19,11 +19,21 @@
   <!-- Layer 3: Heart + final text (shown after countdown) -->
   <canvas id="heartCanvas"></canvas>
 
+  <!-- Tap to start overlay -->
+  <div id="startOverlay">
+    <div id="startBtn">
+      <div class="gift-emoji">🎁</div>
+      <div class="gift-label">Chạm để mở quà</div>
+    </div>
+  </div>
+
   <!-- Rotate notice for landscape mobile -->
   <div id="rotateNotice">
     <div class="rotate-icon">📱</div>
     <p>Vui lòng xoay dọc màn hình</p>
   </div>
+
+  <audio id="bgAudio" src="song.mp3" loop></audio>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
   <script src="demo-data.js"></script>

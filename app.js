@@ -564,6 +564,10 @@
           }
         } else {
           transitionTo(COUNTDOWN[phaseIndex], COUNTDOWN[phaseIndex - 1]);
+          if (phaseIndex === COUNTDOWN.length - 1) {
+            var bgAudio = document.getElementById('bgAudio');
+            if (bgAudio) bgAudio.play().catch(function () {});
+          }
           var delay = (phaseIndex === COUNTDOWN.length - 1) ? 1500 : 1300;
           timer = setTimeout(step, delay);
         }
@@ -671,8 +675,22 @@
 
     // ── Boot ─────────────────────────────────────────────────────────────────
     loadText(COUNTDOWN[0]);
-    timer = setTimeout(step, 1300);
     requestAnimationFrame(animate);
+
+    // Wait for user tap to start (unlocks audio policy)
+    var startOverlay = document.getElementById('startOverlay');
+    var startBtn     = document.getElementById('startBtn');
+    function startCountdown() {
+      startOverlay.style.display = 'none';
+      // Unlock audio: play then immediately pause so timed play() works later
+      var bgAudio = document.getElementById('bgAudio');
+      if (bgAudio) {
+        bgAudio.play().then(function () { bgAudio.pause(); bgAudio.currentTime = 0; }).catch(function () {});
+      }
+      timer = setTimeout(step, 1300);
+    }
+    startBtn.addEventListener('click', startCountdown);
+    startBtn.addEventListener('touchstart', function (e) { e.preventDefault(); startCountdown(); });
 
     window._setCountdownComplete = function (cb) { onComplete = cb; };
   })();
