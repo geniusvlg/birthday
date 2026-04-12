@@ -352,17 +352,22 @@
         return [];
       }
 
-      // Word-wrap
+      // Word-wrap (supports explicit \n line breaks)
       var maxW  = cw * 0.9;
-      var words = text.split(' ');
-      var lines = [words[0]];
-      for (var i = 1; i < words.length; i++) {
-        var test = lines[lines.length - 1] + ' ' + words[i];
-        if (octx.measureText(test).width < maxW) {
-          lines[lines.length - 1] = test;
-        } else {
-          lines.push(words[i]);
+      var lines = [];
+      var segments = text.split('\n');
+      for (var s = 0; s < segments.length; s++) {
+        var words = segments[s].split(' ');
+        var segLines = [words[0]];
+        for (var i = 1; i < words.length; i++) {
+          var test = segLines[segLines.length - 1] + ' ' + words[i];
+          if (octx.measureText(test).width < maxW) {
+            segLines[segLines.length - 1] = test;
+          } else {
+            segLines.push(words[i]);
+          }
         }
+        lines = lines.concat(segLines);
       }
       while (lines.length * (fontSize + 10) > ch && fontSize > 30) {
         fontSize -= 5;
