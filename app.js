@@ -334,10 +334,8 @@
 
     // ── Sample dots from text via offscreen canvas ───────────────────────────
     function sampleText(text) {
-      var safeT = getSafeArea('top'),  safeB = getSafeArea('bottom');
-      var safeL = getSafeArea('left'), safeR = getSafeArea('right');
-      var cw = isMobile ? window.innerWidth  + safeL + safeR : 920;
-      var ch = isMobile ? window.innerHeight + safeT + safeB : 350;
+      var cw = isMobile ? window.innerWidth  : 920;
+      var ch = isMobile ? window.innerHeight : 350;
 
       var offscreen = document.createElement('canvas');
       offscreen.width  = cw;
