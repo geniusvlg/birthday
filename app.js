@@ -709,6 +709,7 @@
     var ctx = canvas.getContext('2d');
     var W, H;
     var heartParticles = [];
+    var sparkles = [];
     var active = false;
     var rafId = null;
 
@@ -774,40 +775,48 @@
     // Draw center text inside heart
     function drawText() {
       if (!finalText) return;
-      var scale = Math.max(10, Math.min(Math.min(W, H) / 40, 25));
-      var maxWidth = 32 * scale * 0.9;
-      var offsetY = 0.1 * H;
 
-      var fontSize = Math.min(W, H) * 0.05;
-      if (fontSize < 10) fontSize = 10;
-
-      function wrapText(txt, maxW, maxLines) {
-        var words = txt.split(' ');
-        var lines = [];
-        var cur = '';
-        ctx.font = 'bold ' + fontSize + "px 'Mali', sans-serif";
-        for (var i = 0; i < words.length; i++) {
-          var test = cur + (cur ? ' ' : '') + words[i];
-          if (ctx.measureText(test).width > maxW && cur) {
-            lines.push(cur);
-            cur = words[i];
-            if (lines.length === maxLines - 1) break;
-          } else {
-            cur = test;
-          }
-        }
-        lines.push(cur);
-        return lines;
-      }
+      // Enforce 11-word limit
+      var rawWords = finalText.replace(/\n/g, ' ').trim().split(/\s+/);
+      if (rawWords.length > 11) rawWords = rawWords.slice(0, 11);
 
       var lines;
-      do {
-        ctx.font = 'bold ' + fontSize + "px 'Mali', sans-serif";
-        lines = wrapText(finalText, maxWidth, 3);
-        fontSize -= 2;
-      } while ((lines.length > 3 || lines.some(function (l) { return ctx.measureText(l).width > maxWidth; })) && fontSize > 10);
+      if (finalText.indexOf('\n') !== -1) {
+        // Manual mode: honour explicit \n line breaks
+        lines = finalText.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+      } else {
+        // Auto mode: distribute words evenly
+        // ≤4 words → 1 line, 5-8 → 2 lines, 9-11 → 4 lines
+        var wc = rawWords.length;
+        var numLines = wc <= 4 ? 1 : wc <= 8 ? 2 : 4;
+        // Balanced split: first (wc % numLines) lines get one extra word
+        var base = Math.floor(wc / numLines);
+        var extra = wc % numLines;
+        lines = [];
+        var idx = 0;
+        for (var l = 0; l < numLines; l++) {
+          var count = base + (l < extra ? 1 : 0);
+          if (count > 0) lines.push(rawWords.slice(idx, idx + count).join(' '));
+          idx += count;
+        }
+      }
 
-      fontSize += 2;
+      // Express all sizing in vh/vw (H and W are the canvas dimensions)
+      var vh = H / 100;
+      var maxWidth   = 72 * vh;   // heart width is ~80vh; allow 72vh for text
+      var offsetY    = 10 * vh;   // vertical offset of heart centre
+
+      // Max font: height budget = 28vh total, split across lines
+      var maxFontByHeight = (28 * vh) / (lines.length * 1.3);
+      var fontSize = Math.min(9 * vh, maxFontByHeight);
+      if (fontSize < 10) fontSize = 10;
+
+      // Shrink only if a line overflows horizontally
+      ctx.font = 'bold ' + fontSize + "px 'Mali', sans-serif";
+      while (fontSize > 10 && lines.some(function (l) { return ctx.measureText(l).width > maxWidth; })) {
+        fontSize -= 1;
+        ctx.font = 'bold ' + fontSize + "px 'Mali', sans-serif";
+      }
       ctx.font = 'bold ' + fontSize + "px 'Mali', sans-serif";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -855,7 +864,39 @@
         drawMiniHeart(p.x, p.y, p.scale, p.alpha);
       });
 
+      updateSparkles();
       drawText();
+    }
+
+    function updateSparkles() {
+      // Spawn 1-2 new sparkles per frame
+      var n = Math.random() < 0.4 ? 2 : 1;
+      for (var i = 0; i < n; i++) {
+        sparkles.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: 1 + Math.random() * 2.5,
+          vy: -(0.1 + Math.random() * 0.25),
+          alpha: 0,
+          maxAlpha: 0.4 + Math.random() * 0.5,
+          growing: true,
+          speed: 0.018 + Math.random() * 0.022,
+        });
+      }
+      sparkles.forEach(function (s) {
+        if (s.growing) {
+          s.alpha += s.speed;
+          if (s.alpha >= s.maxAlpha) { s.alpha = s.maxAlpha; s.growing = false; }
+        } else {
+          s.alpha -= s.speed;
+        }
+        s.y += s.vy;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,' + s.alpha.toFixed(2) + ')';
+        ctx.fill();
+      });
+      sparkles = sparkles.filter(function (s) { return s.alpha > 0; });
     }
 
     // Activated when countdown finishes

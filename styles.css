@@ -78,10 +78,10 @@ html, body {
 
 @keyframes rotateHint {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(90deg); }
+  50% { transform: rotate(-90deg); }
 }
 
-@media (orientation: landscape) and (max-height: 500px) {
+@media (orientation: portrait) and (max-width: 768px) {
   #rotateNotice {
     display: flex;
   }
